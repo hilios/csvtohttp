@@ -1,6 +1,6 @@
 # csvtohttp
 
-he `csvtohttp` CLI tool is designed to automate the process of sending HTTP requests based on the data specified in a CSV file.
+Automates the process of sending HTTP requests based on the data specified in a CSV file.
 
 This tool is especially useful for batch processing large datasets and sending customized requests without manual intervention.
 
