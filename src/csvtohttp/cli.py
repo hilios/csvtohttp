@@ -24,7 +24,7 @@ async def csv_to_http(session, filename, template, run, batch_size, filter, data
     dry_run = not run
     filters = {key: value for kv in filter for key, value in [kv.split('=', 1)]}
     extra_data = {key: value for kv in data for key, value in [kv.split('=', 1)]}
-    logger.debug(textwrap.dedent(f"""
+    logger.info(textwrap.dedent(f"""
         {textwrap.indent(HEADER, "        ")}
         Filename: {filename}
         Template: {template}
@@ -78,7 +78,10 @@ def main():
 
     except Exception as e:
       import traceback
-      logger.error(f'Command failed with message {e}:\n{traceback.format_exc()}')
+      logger.error(f'Command failed with message {e}')
+      if args.verbose:
+        traceback.print_exc()
+
       sys.exit(1)
 
 
