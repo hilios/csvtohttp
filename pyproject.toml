@@ -1,3 +1,22 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "csvtohttp"
+version = "0.1.0"
+description = ""
+authors = ["Edson Hilios"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aiohttp = "^3.9.5"
+PyYAML = "^6.0.1"
+pybars3 = "^0.9.7"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.1.1"
+pytest-asyncio = "^0.23.6"
+# pytest-aiohttp-client = "^0.1.0"
