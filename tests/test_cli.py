@@ -9,8 +9,8 @@ from csvtohttp.cli import csv_to_http, parse_cli, main
 async def test_csv_to_http(mock_client):
     results = await csv_to_http(
         mock_client,
-        filename='tests/fixtures.csv',
-        template='tests/template.hbs',
+        filename='tests/resources/fixtures.csv',
+        template='tests/resources/template.hbs',
         run=True,
         batch_size=None,
         matches=['gender=Male'],
