@@ -18,7 +18,7 @@ from fnmatch import fnmatch
 
 TEMPLATE_PATTERN = re.compile(r'(---)?(?P<metadata>.*?)---\n(?P<body>.*)', re.DOTALL)
 
-async def stream_csv(filename, patterns={}, batch_size=1):
+async def stream_csv(filename, patterns={}, batch_size=None):
     """Generator function to yield batches of rows from a CSV file."""
     # Check if a given row matches all the criteria.
     predicate = lambda row: all(fnmatch(row[key], pattern) for key, pattern in patterns.items())
@@ -27,7 +27,7 @@ async def stream_csv(filename, patterns={}, batch_size=1):
         batch = []
         async for record in aiocsv.AsyncDictReader(csvfile):
             if predicate(record):
-                if batch_size == 1:
+                if batch_size == None:
                     yield record
                 else:
                     batch.append(record)

@@ -36,4 +36,4 @@ async def send_request(session, method, url, headers, payload, dry_run=True):
         logger.error(f"HTTP call failed with status {response.status}\n{text}", extra={'response': text})
         raise Exception(f"{response.status} HTTP Status")
 
-    return text
+    return (response.status, text)

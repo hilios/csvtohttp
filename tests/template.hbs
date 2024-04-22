@@ -1,1 +1,7 @@
-Lorem ipsum dolor sit amet
+---
+method: POST
+url: /hello
+headers:
+    Authorization: "Bearer {{token}}"
+---
+{"message": "Hello, {{first_name}}!"}
