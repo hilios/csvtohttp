@@ -16,6 +16,31 @@ from csvtohttp.request import send_request
 logger = logging.getLogger(__name__)
 
 
+def parse_cli(args):
+    parser = argparse.ArgumentParser(description='Executes HTTP requests from a CSV file using a template.')
+    parser.add_argument('filename', help='CSV file path.')
+    parser.add_argument('template', help='Handlebars template file path for HTTP requests.')
+    parser.add_argument(
+        '-f', '--filter', type=str, nargs='*', default=[],
+        help='Column filters (name=value) with wildcard "*" support. Multiple filters allowed.')
+    parser.add_argument(
+        '-d', '--data', type=str, nargs='*', default=[],
+        help='Data for the template (key=value). Multiple entries allowed.')
+    parser.add_argument(
+        '-b', '--batch-size', type=int, default=None,
+        help='Number of CSV records per request.')
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
+        help='Enables verbose output.')
+    parser.add_argument(
+        '--batch-var', type=str, nargs=1, default='records',
+        help='The variable name in the template')
+    parser.add_argument(
+        '--run', action='store_true',
+        help='Executes the requests.')
+    return parser.parse_args(args)
+
+
 async def csv_to_http(session, filename, template, run, batch_size, matches, data, verbose, **kwargs):
     logging.basicConfig(
         encoding='utf-8',
@@ -57,31 +82,6 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
 async def run_cli(args):
     async with aiohttp.ClientSession() as session:
         await csv_to_http(session, **vars(args))
-
-
-def parse_cli(args):
-    parser = argparse.ArgumentParser(description='Executes HTTP requests from a CSV file using a template.')
-    parser.add_argument('filename', help='CSV file path.')
-    parser.add_argument('template', help='Handlebars template file path for HTTP requests.')
-    parser.add_argument(
-        '-f', '--filter', type=str, nargs='*', default=[],
-        help='Column filters (name=value) with wildcard "*" support. Multiple filters allowed.')
-    parser.add_argument(
-        '-d', '--data', type=str, nargs='*', default=[],
-        help='Data for the template (key=value). Multiple entries allowed.')
-    parser.add_argument(
-        '-b', '--batch-size', type=int, default=None,
-        help='Number of CSV records per request.')
-    parser.add_argument(
-        '-v', '--verbose', action='store_true',
-        help='Enables verbose output.')
-    parser.add_argument(
-        '--batch-var', type=str, nargs=1, default='records',
-        help='The variable name in the template')
-    parser.add_argument(
-        '--run', action='store_true',
-        help='Executes the requests.')
-    return parser.parse_args(args)
 
 
 def main():
