@@ -1,8 +1,5 @@
-import asyncio
 import pytest
-import sys
-from . import mock_client
-from csvtohttp.cli import csv_to_http, parse_cli, main
+from csvtohttp.cli import csv_to_http, parse_cli
 
 
 @pytest.mark.asyncio
@@ -30,10 +27,10 @@ def test_parse_cli():
     defaults = parse_cli(cmd.split())
     assert defaults.filename == 'fixtures.csv'
     assert defaults.template == 'template.hbs'
-    assert defaults.run == False
+    assert defaults.run is False
 
     verbose = parse_cli(f'{cmd} -v'.split())
-    assert verbose.verbose == True
+    assert verbose.verbose is True
 
     batched = parse_cli(f'{cmd} -b 5'.split())
     assert batched.batch_size == 5
@@ -48,4 +45,4 @@ def test_parse_cli():
     assert batch.batch_var == ['foo']
 
     batch = parse_cli(f'{cmd} --run'.split())
-    assert batch.run == True
+    assert batch.run is True

@@ -1,6 +1,4 @@
 import pytest
-import textwrap
-from collections import deque
 from csvtohttp.parser import stream_csv, build_request
 
 

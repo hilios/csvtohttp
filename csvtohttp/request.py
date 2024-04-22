@@ -1,10 +1,7 @@
-import asyncio
 import logging
 import textwrap
 import time
 import uuid
-
-from csvtohttp.parser import build_request
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +11,7 @@ async def send_request(session, method, url, headers, payload, dry_run=True):
     logger.debug(textwrap.dedent(f"""
       Sending request:
       {method} {url} HTTP/1.1
-      {'\n      '.join([f"{k}: {v}" for (k,v) in headers.items()])}
+      {'\n      '.join([f"{k}: {v}" for (k, v) in headers.items()])}
       \t\t
     """).lstrip() + payload)
 

@@ -1,15 +1,7 @@
 import aiocsv
 import aiofiles
-import asyncio
 import pybars
-import csv
-import itertools
-import json
-import logging
-import os
 import re
-import textwrap
-import time
 import yaml
 
 from csvtohttp import TEMPLATE_HELPERS
@@ -18,16 +10,17 @@ from fnmatch import fnmatch
 
 TEMPLATE_PATTERN = re.compile(r'(---)?(?P<metadata>.*?)---\n(?P<body>.*)', re.DOTALL)
 
+
 async def stream_csv(filename, patterns={}, batch_size=None):
     """Generator function to yield batches of rows from a CSV file."""
-    # Check if a given row matches all the criteria.
-    predicate = lambda row: all(fnmatch(row[key], pattern) for key, pattern in patterns.items())
-
     async with aiofiles.open(filename, mode='r', newline='', encoding='utf-8') as csvfile:
         batch = []
+
         async for record in aiocsv.AsyncDictReader(csvfile):
-            if predicate(record):
-                if batch_size == None:
+            predicate = all(fnmatch(record[key], pattern) for key, pattern in patterns.items())
+
+            if predicate is True:
+                if batch_size is None:
                     yield record
                 else:
                     batch.append(record)
@@ -43,7 +36,7 @@ async def stream_csv(filename, patterns={}, batch_size=None):
 def build_request(source, **data):
     """Build the http request using a handlebars template"""
     template = pybars.Compiler().compile(source)
-    template = template(data, helpers = TEMPLATE_HELPERS)
+    template = template(data, helpers=TEMPLATE_HELPERS)
     # Render the template with the provided data
     bits = TEMPLATE_PATTERN.search(template)
     body = bits.group('body').strip()

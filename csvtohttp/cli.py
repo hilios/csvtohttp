@@ -4,12 +4,7 @@ import aiohttp
 import aiofiles
 import argparse
 import asyncio
-import csv
-import itertools
-import json
 import logging
-import os
-import re
 import textwrap
 import sys
 
@@ -22,13 +17,17 @@ logger = logging.getLogger(__name__)
 
 
 async def csv_to_http(session, filename, template, run, batch_size, matches, data, verbose, **kwargs):
-    logging.basicConfig(encoding='utf-8', level=logging.DEBUG if verbose else logging.INFO,
-        format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(
+        encoding='utf-8',
+        level=logging.DEBUG if verbose else logging.INFO,
+        format='%(asctime)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
 
     dry_run = not run
     filters = {key: value for kv in matches for key, value in [kv.split('=', 1)]}
     extra_data = {key: value for kv in data for key, value in [kv.split('=', 1)]}
-    logger.info(textwrap.dedent(f"""
+    logger.info(textwrap.dedent(
+        f"""
         {textwrap.indent(HEADER, "        ")}
         Filename: {filename}
         Template: {template}
@@ -37,7 +36,7 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
         Filters: {', '.join([f"{k} = {v}" for k, v in filters.items()])}
         Data: {', '.join([f"{k} = {v}" for k, v in extra_data.items()])}
         ---
-    """))
+        """))
 
     tasks = []
     async with aiofiles.open(template, mode='r') as file:
@@ -56,25 +55,31 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
 
 
 async def run_cli(args):
-  async with aiohttp.ClientSession() as session:
-      await csv_to_http(session, **vars(args))
+    async with aiohttp.ClientSession() as session:
+        await csv_to_http(session, **vars(args))
 
 
 def parse_cli(args):
-    parser = argparse.ArgumentParser(description=f'Executes HTTP requests from a CSV file using a template.')
+    parser = argparse.ArgumentParser(description='Executes HTTP requests from a CSV file using a template.')
     parser.add_argument('filename', help='CSV file path.')
     parser.add_argument('template', help='Handlebars template file path for HTTP requests.')
-    parser.add_argument('-f', '--filter', type=str, nargs='*', default=[],
+    parser.add_argument(
+        '-f', '--filter', type=str, nargs='*', default=[],
         help='Column filters (name=value) with wildcard "*" support. Multiple filters allowed.')
-    parser.add_argument('-d', '--data', type=str, nargs='*', default=[],
+    parser.add_argument(
+        '-d', '--data', type=str, nargs='*', default=[],
         help='Data for the template (key=value). Multiple entries allowed.')
-    parser.add_argument('-b', '--batch-size', type=int, default=None,
+    parser.add_argument(
+        '-b', '--batch-size', type=int, default=None,
         help='Number of CSV records per request.')
-    parser.add_argument('-v', '--verbose', action='store_true',
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
         help='Enables verbose output.')
-    parser.add_argument('--batch-var', type=str, nargs=1, default='records',
+    parser.add_argument(
+        '--batch-var', type=str, nargs=1, default='records',
         help='The variable name in the template')
-    parser.add_argument('--run', action='store_true',
+    parser.add_argument(
+        '--run', action='store_true',
         help='Executes the requests.')
     return parser.parse_args(args)
 
