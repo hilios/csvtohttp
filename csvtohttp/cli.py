@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import aiohttp
+import aiofiles
 import argparse
 import asyncio
 import csv
@@ -13,16 +14,16 @@ import textwrap
 import sys
 
 from csvtohttp import HEADER
-from csvtohttp.parser import stream_csv, read_file
-from csvtohttp.request import build_and_send
+from csvtohttp.parser import stream_csv, build_request
+from csvtohttp.request import send_request
 
 
 logger = logging.getLogger(__name__)
 
 
-async def csv_to_http(session, filename, template, run, batch_size, filter, data, **kwargs):
+async def csv_to_http(session, filename, template, run, batch_size, matches, data, **kwargs):
     dry_run = not run
-    filters = {key: value for kv in filter for key, value in [kv.split('=', 1)]}
+    filters = {key: value for kv in matches for key, value in [kv.split('=', 1)]}
     extra_data = {key: value for kv in data for key, value in [kv.split('=', 1)]}
     logger.info(textwrap.dedent(f"""
         {textwrap.indent(HEADER, "        ")}
@@ -34,15 +35,17 @@ async def csv_to_http(session, filename, template, run, batch_size, filter, data
         Data: {', '.join([f"{k} = {v}" for k, v in extra_data.items()])}
         ---
     """))
-    i = 0
+
     tasks = []
-    template = await read_file(template)
+    async with aiofiles.open('filename', mode='r') as file:
+        template = await file.read()
     filter_data = {'_filters': filters}
-    async for rows in stream_csv(filename, filters=filters, batch_size=batch_size):
-        i += 1
-        task = asyncio.create_task(
-          build_and_send(session, template, i, rows, extra_data | filter_data, dry_run=dry_run)
-        )
+    async for rows in stream_csv(filename, patterns=filters, batch_size=batch_size):
+        data = list(rows)
+        data = {kwargs['batch_name']: data} if len(data) > 1 else data[0]
+        (method, url, headers, body) = build_request(template, **(data | extra_data | filter_data))
+
+        task = asyncio.create_task(send_request(session, method, url, headers, body, dry_run))
         tasks.append(task)
 
     await asyncio.gather(*tasks)
@@ -65,6 +68,8 @@ def main():
         help='Number of CSV records per request.')
     parser.add_argument('-v', '--verbose', action='store_true',
         help='Enables verbose output.')
+    parser.add_argument('--batch-name', type=str, default='records',
+        help='The variable name in the template')
     parser.add_argument('--run', action='store_true',
         help='Executes the requests.')
     args = parser.parse_args()

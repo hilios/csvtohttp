@@ -1,3 +1,5 @@
+import aiocsv
+import aiofiles
 import asyncio
 import pybars
 import csv
@@ -16,28 +18,26 @@ from fnmatch import fnmatch
 
 TEMPLATE_PATTERN = re.compile(r'(---)?(?P<metadata>.*?)---\n(?P<body>.*)', re.DOTALL)
 
-
-async def stream_csv(filename, filters={}, batch_size=1):
+async def stream_csv(filename, patterns={}, batch_size=1):
     """Generator function to yield batches of rows from a CSV file."""
     # Check if a given row matches all the criteria.
-    predicate = lambda row: all(fnmatch(row[key], pattern) for key, pattern in filters.items())
-    def _read_in_batches():
-        with open(filename, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            data =  filter(predicate, reader)
-            return itertools.batched(data, batch_size)
+    predicate = lambda row: all(fnmatch(row[key], pattern) for key, pattern in patterns.items())
 
-    batched = await asyncio.to_thread(_read_in_batches)
-    for batch in batched:
-        yield batch
+    async with aiofiles.open(filename, mode='r', newline='', encoding='utf-8') as csvfile:
+        batch = []
+        async for record in aiocsv.AsyncDictReader(csvfile):
+            if predicate(record):
+                if batch_size == 1:
+                    yield record
+                else:
+                    batch.append(record)
 
+                if len(batch) == batch_size:
+                    yield batch[:]
+                    batch = []
 
-async def read_file(filename):
-    def _open_and_read():
-        with open(filename, 'r', encoding='utf-8') as file:
-            return file.read()
-
-    return await asyncio.to_thread(_open_and_read)
+        if len(batch) > 0:
+            yield batch
 
 
 def build_request(source, **data):
