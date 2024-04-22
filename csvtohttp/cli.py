@@ -40,9 +40,8 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
     async with aiofiles.open('filename', mode='r') as file:
         template = await file.read()
     filter_data = {'_filters': filters}
-    async for rows in stream_csv(filename, patterns=filters, batch_size=batch_size):
-        data = list(rows)
-        data = {kwargs['batch_name']: data} if len(data) > 1 else data[0]
+    async for record in stream_csv(filename, patterns=filters, batch_size=batch_size):
+        data = {kwargs['batch_var']: data} if len(record) > 1 else record
         (method, url, headers, body) = build_request(template, **(data | extra_data | filter_data))
 
         task = asyncio.create_task(send_request(session, method, url, headers, body, dry_run))
@@ -68,7 +67,7 @@ def main():
         help='Number of CSV records per request.')
     parser.add_argument('-v', '--verbose', action='store_true',
         help='Enables verbose output.')
-    parser.add_argument('--batch-name', type=str, default='records',
+    parser.add_argument('--batch-var', type=str, default='records',
         help='The variable name in the template')
     parser.add_argument('--run', action='store_true',
         help='Executes the requests.')
