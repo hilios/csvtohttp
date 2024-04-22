@@ -23,3 +23,7 @@ pytest-aiohttp = "^1.0.5"
 pytest = "^8.1.1"
 pytest-asyncio = "^0.23.6"
 # pytest-aiohttp-client = "^0.1.0"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.0.0"
+
