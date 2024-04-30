@@ -24,7 +24,7 @@ async def test_stream_csv_batched():
 @pytest.mark.asyncio
 async def test_stream_csv_filter():
     results = []
-    async for rows in stream_csv("tests/resources/fixtures.csv", patterns={'gender': '*queer'}):
+    async for rows in stream_csv("tests/resources/fixtures.csv", filters={'gender': '*queer'}):
         results.append(rows)
     assert len(results) == 1
     assert results[0]['first_name'] == 'Hermine'

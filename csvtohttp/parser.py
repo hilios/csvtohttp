@@ -11,15 +11,14 @@ from fnmatch import fnmatch
 TEMPLATE_PATTERN = re.compile(r'(---)?(?P<metadata>.*?)---\n(?P<body>.*)', re.DOTALL)
 
 
-async def stream_csv(filename, patterns={}, batch_size=None):
+async def stream_csv(filename, filters={}, batch_size=None):
     """Generator function to yield batches of rows from a CSV file."""
     async with aiofiles.open(filename, mode='r', newline='', encoding='utf-8') as csvfile:
         batch = []
-
         async for record in aiocsv.AsyncDictReader(csvfile):
-            predicate = all(fnmatch(record[key], pattern) for key, pattern in patterns.items())
+            predicates = all(fnmatch(record[key], pattern) for key, pattern in filters.items())
 
-            if predicate is True:
+            if predicates is True:
                 if batch_size is None:
                     yield record
                 else:

@@ -4,7 +4,7 @@ from aiohttp import web
 
 async def echo(request):
     text = await request.text()
-    return web.Response(status=200, body=f'{request.method} {request.url} {text}')
+    return web.Response(status=200, body=f'{request.method}\t{request.url}\t{text}')
 
 
 @pytest.fixture

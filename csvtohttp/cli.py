@@ -16,12 +16,12 @@ from csvtohttp.request import send_request
 logger = logging.getLogger(__name__)
 
 
-def parse_cli(args):
+def parse_cli(args=None):
     parser = argparse.ArgumentParser(description='Executes HTTP requests from a CSV file using a template.')
     parser.add_argument('filename', help='CSV file path.')
     parser.add_argument('template', help='Handlebars template file path for HTTP requests.')
     parser.add_argument(
-        '-f', '--filter', type=str, nargs='*', default=[],
+        '-f', '--filters', type=str, nargs='*', default=[],
         help='Column filters (name=value) with wildcard "*" support. Multiple filters allowed.')
     parser.add_argument(
         '-d', '--data', type=str, nargs='*', default=[],
@@ -38,10 +38,11 @@ def parse_cli(args):
     parser.add_argument(
         '--run', action='store_true',
         help='Executes the requests.')
+
     return parser.parse_args(args)
 
 
-async def csv_to_http(session, filename, template, run, batch_size, matches, data, verbose, **kwargs):
+async def csv_to_http(session, filename, template, run, batch_size, filters, data, verbose, batch_var):
     logging.basicConfig(
         encoding='utf-8',
         level=logging.DEBUG if verbose else logging.INFO,
@@ -49,8 +50,9 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
         datefmt='%Y-%m-%d %H:%M:%S')
 
     dry_run = not run
-    filters = {key: value for kv in matches for key, value in [kv.split('=', 1)]}
+    filters = {key: value for kv in filters for key, value in [kv.split('=', 1)]}
     extra_data = {key: value for kv in data for key, value in [kv.split('=', 1)]}
+    filter_data = {'_filters': filters}
     logger.info(textwrap.dedent(
         f"""
         {textwrap.indent(HEADER, "        ")}
@@ -66,11 +68,10 @@ async def csv_to_http(session, filename, template, run, batch_size, matches, dat
     tasks = []
     async with aiofiles.open(template, mode='r') as file:
         template = await file.read()
-    filter_data = {'_filters': filters}
 
-    async for record in stream_csv(filename, patterns=filters, batch_size=batch_size):
+    async for record in stream_csv(filename, filters=filters, batch_size=batch_size):
         # if record is a list then the values are batched
-        data = {kwargs['batch_var']: data} if isinstance(record, list) else record
+        data = {batch_var: record} if isinstance(record, list) else record
         (method, url, headers, body) = build_request(template, **(data | extra_data | filter_data))
 
         task = asyncio.create_task(send_request(session, method, url, headers, body, dry_run))
@@ -86,7 +87,7 @@ async def run_cli(args):
 
 def main():
     try:
-        args = parse_cli(sys.argv)
+        args = parse_cli()
         asyncio.run(run_cli(args))
         sys.exit(0)
 

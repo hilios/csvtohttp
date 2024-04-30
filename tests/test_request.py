@@ -4,9 +4,12 @@ from csvtohttp.request import send_request
 
 @pytest.mark.asyncio
 async def test_send_request(mock_client):
-    (status, result) = await send_request(mock_client, 'POST', '/hello', {}, 'Hello, world', dry_run=False)
+    (status, response) = await send_request(mock_client, 'POST', '/hello', {}, 'Hello, world', dry_run=False)
     assert status == 200
-    assert result == f'POST {mock_client.make_url('/hello')} Hello, world'
+    (method, url, payload) = response.split('\t')
+    assert method == 'POST'
+    assert url == str(mock_client.make_url('/hello'))
+    assert payload == 'Hello, world'
 
 
 @pytest.mark.asyncio
